@@ -3,3 +3,9 @@
 ################################################################################
 
 /ApplicationLogger.Api/bin
+/ApplicationLogger.Api/obj/Debug
+/ApplicationLogger.Client/bin
+/ApplicationLogger.Client/obj/Debug
+/ApplicationLogger.Data/obj/Debug
+/ApplicationLogger.Services/obj/Debug
+/packages

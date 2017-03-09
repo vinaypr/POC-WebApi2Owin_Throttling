@@ -1,0 +1,142 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+<div class="row">
+    <div class="col-md-6">
+        <h2>Register User</h2>
+        <div class="clearfix">
+            <label class="label-default">User Id</label>
+            <input class="input-sm" type="text" id="userId" />
+        </div>
+        <div class="clearfix">
+            <label class="label-default">Password</label>
+            <input class="input-sm" type="password" id="password" />
+        </div>
+        <div class="clearfix">
+            <label class="label-default">Display Name</label>
+            <input class="input-sm" type="text" id="displayName" />
+        </div>
+        <input class="btn-info" type="button" id="registerUser" value="Register Application" />
+    </div>
+    <div class="col-md-3">
+        <label class="label-success"  id="displayAppMessage"></label>
+    </div>
+    <div class="col-md-3">
+        <label class="label-danger" id="errorAppMessage"></label>
+    </div>
+</div>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <h2>Create Log(User must register an application before creating Log)</h2>
+
+        <div class="clearfix">
+            <label class="label-default">Logger Name</label>
+            <input class="input-sm" type="text" id="loggerName" />
+        </div>
+        <div class="clearfix">
+            <label class="label-default">User Id</label>
+            <input class="input-sm" type="text" id="loggerUserId" />
+        </div>
+        <div class="clearfix">
+            <label class="label-default">Level</label>
+            <input class="input-sm" type="text" id="level" />
+        </div>
+        <div class="clearfix">
+            <label class="label-default">Message</label>
+            <input class="input-sm" type="text" id="message" />
+        </div>
+        <div> <input class="btn-info" type="button" id="saveLog" value="Save" /></div>
+    </div>
+    <div class="col-md-3">
+        <label class="label-success" id="displayMessage"></label>
+    </div>
+    <div class="col-md-3">
+        <label class="label-danger" id="errorMessage"></label>
+    </div>
+</div>
+<link href="~/Content/bootstrap.css" rel="stylesheet" />
+<link href="~/Content/Site.css" rel="stylesheet" />
+<script src="~/Scripts/jquery-1.10.2.min.js"></script>
+<script src="~/Scripts/bootstrap.min.js"></script>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        var accessToken = "";
+        var registerApplicationUrl = "http://localhost/ApplicationLoggerApi/logger/register";
+        var createLogApplicationUrl = "http://localhost/ApplicationLoggerApi/logger/addapplicationlogger";
+        var tokenUrl = "http://localhost/ApplicationLoggerApi/token";
+
+        $('#registerUser').click(function () {
+            var newUserRequest = { "UserId": $('#userId').val(), "Password": $('#password').val(), "DisplayName": $('#displayName').val() };
+            $.ajax({
+                type: "POST",
+                url: registerApplicationUrl,
+                data: newUserRequest,
+                success: function (data, status, jqXHR) {
+                    var result = data;
+                    if (result.HasError == false) {
+                        $('#displayAppMessage').html('Saved Successfully...');
+                        $('#errorAppMessage').html('');
+                        var tokenRequest = { "UserName": result.UserId, "Password": result.Password, "grant_type": "password" };
+                        $.ajax({
+                            type: "POST",
+                            url: tokenUrl,
+                            data: tokenRequest,
+                            success: function (response, st, XHR) {
+                                accessToken = response.access_token;
+                            },
+
+                            error: function (jqXHR, st) {
+                                
+                            }
+                        });
+                    }
+                    else {
+                        $('#errorAppMessage').html('Failed, Status code: ' + result.ErroMessage);
+                        $('#displayAppMessage').html('');
+                    }
+                },
+
+                error: function (jqXHR, status) {
+                    $('#errorAppMessage').html('Failed, Status code: '+ jqXHR.status);
+                    $('#displayAppMessage').html('');
+                }
+            });
+        })
+
+        $('#saveLog').click(function () {
+            var logRequest = {
+                "UserId": $('#loggerUserId').val(),
+                "Logger": $('#loggerName').val(),
+                "Level": $('#level').val(),
+                "Message": $('#message').val()
+            };
+            $.ajax({
+                type: "POST",
+                url: createLogApplicationUrl,
+                data: logRequest,
+                success: function (data, status, jqXHR) {
+                    var result = data;
+                    if (result.HasError == false) {
+                        $('#displayMessage').html('Saved Successfully');
+                        $('#errorMessage').html('');
+                    }
+                    else {
+                        $('#errorAppMessage').html('Failed, Status code: ' + result.ErroMessage);
+                        $('#displayAppMessage').html('');
+                    }
+                },
+
+                error: function (jqXHR, status) {
+                    $('#errorMessage').html('Failed, Status code: ' + jqXHR.status);
+                    $('#displayMessage').html('');
+                },
+                beforeSend: function (xhr) {
+                    /* Authorization header */
+                     xhr.setRequestHeader("Authorization", "Bearer " + accessToken);
+                },
+            });
+        })
+    })
+</script>
